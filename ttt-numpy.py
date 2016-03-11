@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 XChar = "X"
 OChar = "O"
@@ -23,8 +24,12 @@ class Board(object):
         # print(human)
         self.board = np.zeros(9, np.int)
         self.human = human
+        self.computer = XValue if human == OValue else OValue
+        self.state_computer_winner = STATE_WINNER_X if human == OValue else STATE_WINNER_O
+        self.state_human_winner = STATE_WINNER_X if human == XValue else STATE_WINNER_O
         self.isHumanOrder = human==XValue
         self.isXOrder = True;
+        self.r = random.random()
         
     @staticmethod
     def valueAsChar(value):
@@ -78,14 +83,38 @@ class Board(object):
         legal = legal_moves(self.board)
         move = None
         while move not in legal:
-            print(self.board)
-            move = ask_number("Your move. Please, select one of empty field (1...9): ", 1, self.board.size)
+            #print(self.board)
+            move = ask_number("Your move. Please, select one of empty field (1...9): ", 1, self.board.size+1)
             if move not in legal:
                 print("\nThis field is already engaged. Please, use another one.\n")
         return move
 
     def makeComputerMove(self):
         '''Computer running function'''
+        board = self.board.copy()
+        BEST_MOVES = np.array([[4, 0, 2, 6, 8, 1, 3, 5, 7],
+                      [8, 6, 2, 0, 4, 7, 3, 5, 1],
+                      [2, 6, 0, 8, 4, 5, 7, 1, 3]], dtype=np.int)
+        best_moves = BEST_MOVES[random.randrange(BEST_MOVES.shape[0])]
+        print(best_moves)
+        print("Computer's move is ", end = " ")
+        
+        for move in legal_moves(board):
+            board[move] = self.computer
+            if winner(board) == self.state_computer_winner:
+                print(move)
+                return move
+            board[move] = EmptyValue
+        for move in legal_moves(board):
+            board[move] = self.human
+            if winner(board) == self.state_human_winner:
+                print(move)
+                return move
+        board[move] = EmptyValue
+        for move in best_moves:
+            if move in legal_moves(board):
+                print(move)
+                return move
 
 def legal_moves(board):
     '''Function to create a list of available moves'''
@@ -164,7 +193,10 @@ def init_game():
 def main():
     display_instructions()
     global board
-    board = init_game()
-    board.startGame()
+    while True:
+        board = init_game()
+        board.startGame()
+        if not ask_yes_no("Do you wanna repeat? (y/n)"):
+            break
     
 main()
